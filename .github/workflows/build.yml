@@ -1,0 +1,47 @@
+name: Build XMRig
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            git \
+            build-essential \
+            cmake \
+            libuv1-dev \
+            libssl-dev \
+            libhwloc-dev
+
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc)
+
+      - name: Package
+        run: |
+          mkdir xmrig-linux
+          cp build/xmrig xmrig-linux/
+          tar -czvf xmrig-linux.tar.gz xmrig-linux/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xmrig-linux
+          path: xmrig-linux.tar.gz
